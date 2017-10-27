@@ -5,7 +5,7 @@ from PyQt5.QtWidgets import QApplication, QDialog
 import sys
 
 app = QtWidgets.QApplication(sys.argv)
-window = uic.loadUi("untitled.ui")
+window = uic.loadUi("window.ui")
 
 
 
