@@ -6,7 +6,7 @@ conn = psycopg2.connect(conn_string)
 
 # Open a cursor to perform database operations
 cur = conn.cursor()
-
+#lol kek cheburek
 # Execute a command: this creates a new table
 # cur.execute("CREATE TABLE test (id serial PRIMARY KEY, num integer, data varchar);")
 
