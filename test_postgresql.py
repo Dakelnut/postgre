@@ -5,7 +5,7 @@ import sys
 def main():
     # Define our connection string
     # conn_string = "host='localhost' dbname='ftest1' user='postgres' password='root'"
-    conn_string = "host='localhost'dbname='ftest1' user='postgres' password='root'"
+    conn_string = "host='localhost'dbname='test38' user='postgres' password='root'"
     # print the connection string we will use to connect
     print("Connecting to database\n	->%s" % (conn_string))
 
@@ -17,7 +17,7 @@ def main():
     print("Connected!\n")
 
 
-    cursor.execute("select * from cartel.cartel;")
+    cursor.execute("select * from sc.table;")
     print(cursor.fetchone())
 
 

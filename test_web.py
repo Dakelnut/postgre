@@ -1,6 +1,7 @@
 import psycopg2
-conn_string = "host='localhost' user='postgres' password='root'"
+# conn_string = "host='localhost' user='postgres' password='root'"
 # Connect to an existing database
+conn_string = "host='localhost'dbname='test38' user='postgres' password='root'"
 conn = psycopg2.connect(conn_string)
 
 # Open a cursor to perform database operations
@@ -15,8 +16,16 @@ cur = conn.cursor()
 #       (100, "abc'def"))
 
 # Query the database and obtain data as Python objects
-cur.execute("SELECT * FROM test;")
-print(cur.fetchone())
+# cur.execute("SELECT name FROM sc.table;")
+# for el in cur.fetchall():
+#     print(el)
+#
+# cur.execute("INSERT INTO sc.table (name) VALUES ('name_of_awd');")
+
+
+cur.execute("SELECT * FROM sc.table;")
+for el in cur.fetchall():
+    print(el)
 # (1, 100, "abc'def")
 
 # Make the changes to the database persistent
