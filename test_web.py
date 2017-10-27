@@ -23,6 +23,8 @@ cur = conn.cursor()
 # cur.execute("INSERT INTO sc.table (name) VALUES ('name_of_awd');")
 
 
+#push from local branch - test
+
 cur.execute("SELECT * FROM sc.table;")
 for el in cur.fetchall():
     print(el)
