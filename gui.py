@@ -27,6 +27,7 @@ class ConnectionDialog():
 
         if self.test_connection(conn_string):
             self.conn_string = conn_string
+        #     TODO!!
 
         else:
             QMessageBox.information(self.dialog_window, 'INFO', "Please check the connection data or existence of database.",
@@ -52,10 +53,16 @@ class ConnectionDialog():
 
 
 
-class DdWindows(QMainWindow):
+class DdWindows():
 
+    def __init__(self):
+        self.dialog_window = loadUi("mwindow.ui")
+        self.buttonBox = self.dialog_window.buttonBox
+        self.buttonBox.accepted.connect(self.apply)
+        self.buttonBox.rejected.connect(self.reject)
+        self.conn_string = ""
+        self.dialog_window.show()
 
-    # def load(self,path_to_db):
 
 
 
