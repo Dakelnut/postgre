@@ -1,11 +1,14 @@
-from PyQt5 import QtWidgets, uic
+
 import sys
-from PyQt5.QtWidgets import QApplication, QDialog
+from PyQt5.QtWidgets import *
+from PyQt5.QtCore import *
+from PyQt5.QtGui import *
+from PyQt5.uic import *
 
 import sys
 
-app = QtWidgets.QApplication(sys.argv)
-window = uic.loadUi("window.ui")
+app = QApplication(sys.argv)
+window = loadUi("db2.ui")
 
 
 
@@ -13,20 +16,39 @@ window = uic.loadUi("window.ui")
 
 
 
-dial = window.dial
+table = window.tableWidget
 
-lcdNumber = window.lcdNumber
+# lcdNumber = window.lcdNumber
 
-progressbar = window.progressBar
-def slider_changed():
-    lcdNumber.display(dial.value())
-    progressbar.setValue(dial.value())
+# progressbar = window.progressBar
+# def slider_changed():
+#     lcdNumber.display(dial.value())
+#     progressbar.setValue(dial.value())
 
-dial.valueChanged.connect(slider_changed)
-
-
+# dial.valueChanged.connect(slider_changed)
 
 
+# table.data.append([1,1,1,1,1])
+data = {'Kitty': ['1', '2', '3', '3'],
+        'Cat': ['4', '5', '6', '2'],
+        'Meow': ['7', '8', '9', '5'],
+        'Purr': ['4', '3', '4', '8'], }
+
+table.setRowCount(5)
+table.setColumnCount(5)
+
+horHeaders = []
+for n, key in enumerate(sorted(data.keys())):
+    horHeaders.append(key)
+    for m, item in enumerate(data[key]):
+        newitem = QTableWidgetItem(item)
+        table.setItem(m, n, newitem)
+
+table.setHorizontalHeaderLabels(horHeaders)
+
+# Adjust size of Table
+table.resizeColumnsToContents()
+table.resizeRowsToContents()
 
 window.show()
 sys.exit(app.exec_())
