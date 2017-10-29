@@ -1,16 +1,12 @@
-from PyQt5.QtWidgets import *
-from PyQt5.QtCore import *
-from PyQt5.QtGui import *
+
 from PyQt5.uic import *
-from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QMessageBox
-from PyQt5.QtGui import QIcon
-from PyQt5.QtCore import pyqtSlot
+from PyQt5.QtWidgets import QApplication, QMessageBox
 import psycopg2
 import sys
 
 
 
-flag = False
+
 
 class ConnectionDialog():
 
@@ -21,6 +17,7 @@ class ConnectionDialog():
         self.buttonBox.rejected.connect(self.reject)
         self.conn_string = ""
         self.dialog_window.show()
+
 
     def apply(self):
         conn_string = str("host='"+self.dialog_window.lineEdit_5.text()+"' dbname='"+self.dialog_window.lineEdit_6.text()+"' user='"+self.dialog_window.lineEdit_7.text()+"' password='"+self.dialog_window.lineEdit_9.text()+"'")
@@ -91,6 +88,7 @@ if __name__ == "__main__":
     # window.show()
     app = QApplication(sys.argv)
     test = ConnectionDialog()
+    a=0
     # if flag:
     #     main_window = DdWindow(test.conn_string)
 
