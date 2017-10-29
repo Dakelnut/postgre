@@ -1,14 +1,14 @@
 
 from PyQt5.uic import *
 from PyQt5.QtWidgets import QApplication, QMessageBox
+from PyQt5 import QtWidgets
+
 import psycopg2
 import sys
 
 
 
-
-
-class ConnectionDialog():
+class ConnectionDialog(QtWidgets.QMainWindow):
 
     def __init__(self):
         self.dialog_window = loadUi("dialog.ui")
@@ -24,6 +24,8 @@ class ConnectionDialog():
 
         if self.test_connection(conn_string):
             self.conn_string = conn_string
+
+
 
 
         else:
@@ -58,7 +60,7 @@ class DdWindow():
         self.main_table = self.main_window.tableWidget
         self.add_button = self.main_window.add
         self.delete_button = self.main_window.my_delete
-        self.search_button = self.main_window.seach
+        self.search_button = self.main_window.search
         self.help_button = self.main_window.help
         self.table_chooser = self.main_window.table_chooser
         self.init_table_chooser(self.table_chooser)
@@ -88,7 +90,8 @@ if __name__ == "__main__":
     # window.show()
     app = QApplication(sys.argv)
     test = ConnectionDialog()
-    a=0
-    # if flag:
-    #     main_window = DdWindow(test.conn_string)
+    conn_string = "host='localhost'dbname='test38' user='postgres' password='root'"
+    window = DdWindow(conn_string)
+
+    sys.exit(app.exec_())
 
