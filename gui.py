@@ -10,7 +10,7 @@ import sys
 
 
 
-
+flag = False
 
 class ConnectionDialog():
 
@@ -27,7 +27,7 @@ class ConnectionDialog():
 
         if self.test_connection(conn_string):
             self.conn_string = conn_string
-        #     TODO!!
+
 
         else:
             QMessageBox.information(self.dialog_window, 'INFO', "Please check the connection data or existence of database.",
@@ -53,15 +53,30 @@ class ConnectionDialog():
 
 
 
-class DdWindows():
+class DdWindow():
 
-    def __init__(self):
-        self.dialog_window = loadUi("mwindow.ui")
-        self.buttonBox = self.dialog_window.buttonBox
-        self.buttonBox.accepted.connect(self.apply)
-        self.buttonBox.rejected.connect(self.reject)
-        self.conn_string = ""
-        self.dialog_window.show()
+    def __init__(self,cn_string):
+        self.init_connection(cn_string)
+        self.main_window = loadUi("mwindow.ui")
+        self.main_table = self.main_window.tableWidget
+        self.add_button = self.main_window.add
+        self.delete_button = self.main_window.my_delete
+        self.search_button = self.main_window.seach
+        self.help_button = self.main_window.help
+        self.table_chooser = self.main_window.table_chooser
+        self.init_table_chooser(self.table_chooser)
+        self.main_window.show()
+
+    def init_table_chooser(self, tb_chooser):
+        self.cursor.execute("select relname from pg_class where relkind='r' and relname !~ '^(pg_|sql_)';")
+        table_names = [name[0] for name in self.cursor.fetchall()]
+        for table in table_names:
+            tb_chooser.addItem(table)
+
+    def init_connection(self,conn_string):
+        self.conn = psycopg2.connect(conn_string)
+        self.cursor = self.conn.cursor()
+
 
 
 
@@ -75,7 +90,7 @@ if __name__ == "__main__":
     # window.open()
     # window.show()
     app = QApplication(sys.argv)
-    # window = loadUi("dialog.ui")
-    # window.show()
     test = ConnectionDialog()
+    # if flag:
+    #     main_window = DdWindow(test.conn_string)
 
