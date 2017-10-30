@@ -1,4 +1,5 @@
 from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QHeaderView
 from PyQt5.QtWidgets import QTableWidgetItem
 from PyQt5.uic import *
 from PyQt5.QtWidgets import QApplication, QMessageBox
@@ -74,6 +75,7 @@ class DdWindow( QtWidgets.QMainWindow):
 
         self.init_schema_chooser(self.schema_chooser)
         self.init_table_chooser(self.table_chooser)
+        self.main()
         # self.fill_table()
 
 
@@ -90,6 +92,18 @@ class DdWindow( QtWidgets.QMainWindow):
             for table in table_names:
                 tb_chooser.addItem(table)
 
+            self.choosen_table = self.table_chooser.currentText()
+            self.fill_table()
+
+
+    def clean_table(self):
+        self.main_table.setRowCount(0)
+        self.main_table.setColumnCount(0)
+        self.main_table.clear()
+
+        # self.main_table.setHorizontalHeaderLabels([])
+
+
 
 
     def init_schema_chooser(self, sh_chooser):
@@ -97,6 +111,7 @@ class DdWindow( QtWidgets.QMainWindow):
         schema_names = [name[0] for name in self.cursor.fetchall()]
         for schema in schema_names:
             sh_chooser.addItem(schema)
+        # sh_chooser.addItem(schema_names[1])
 
         self.choosen_schema = self.schema_chooser.currentText()
 
@@ -108,43 +123,52 @@ class DdWindow( QtWidgets.QMainWindow):
 
 
     def fill_table(self):
-        # self.cursor.execute(("SELECT * FROM  {0}").format(self.table_names[1]))
-        self.cursor.execute(("SELECT * FROM sc.{0}").format(self.table_names[0]))
-        # self.cursor.execute(("select a.attname, format_type(a.atttypid, a.atttypmod) from pg_attribute a where attname = 'geog'"))
-        print(self.cursor.description)
-        # a = [elem for elem in self.cursor.fetchall()]
-        # print( a)
-        #
-        # colnames = [desc[0] for desc in self.cursor.description]
-        # print(colnames)
-        #
-        #
-        #
-        # self.main_table.setColumnCount(2)
-        # self.main_table.insertRow(self.main_table.rowCount())
-        #
-        # newitem = QTableWidgetItem(str(a[0][0]))
-        # print(a[0][0])
-        # self.main_table.setItem(0, 0, newitem)
-        # self.main_table.item(0, 0).setTextAlignment(Qt.AlignLeft | Qt.AlignVCenter)
-        # newitem = QTableWidgetItem(a[0][1])
-        # self.main_table.setItem(0, 1, newitem)
-        # self.main_table.item(0, 1).setTextAlignment(Qt.AlignLeft | Qt.AlignVCenter)
-        # self.main_table.setHorizontalHeaderLabels(colnames)
-        #
-        # # for n, meaning in  enumerate(a):
-        # #     self.main_table.insertRow(self.main_table.rowCount())
-        # #     print(n,"  ",meaning)
-        # #     for m, item in enumerate(meaning):
-        # #         print("\t",m, "  ", item)
-        # #         newitem = QTableWidgetItem(item)
-        # #         self.main_table.setItem(n, m, newitem)
-        # #         self.main_table.item(n, m).setTextAlignment(Qt.AlignLeft | Qt.AlignVCenter)
-        # print(self.main_table.item(0,0).text())
+
+        if self.choosen_schema != None and self.choosen_table != None:
+
+            self.cursor.execute(("SELECT * FROM {0}.{1}").format(self.choosen_schema,self.choosen_table))
+
+            print(self.cursor.description)
+
+            a = self.cursor.fetchall()
+            print( a)
+
+            colnames = [desc[0] for desc in self.cursor.description]
+
+            self.main_table.setColumnCount(len(colnames))
+
+            for n, meaning in  enumerate(a):
+                self.main_table.insertRow(self.main_table.rowCount())
+                # print(n,"  ",meaning)
+                for m, item in enumerate(meaning):
+                    # print("\t",m, "  ", item)
+                    newitem = QTableWidgetItem(str(item))
+                    self.main_table.setItem(n, m, newitem)
+                    self.main_table.item(n, m).setTextAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+            self.main_table.setHorizontalHeaderLabels(colnames)
+            header = self.main_table.horizontalHeader()
+            for i in range(header.count()):
+                self.main_table.horizontalHeader().setSectionResizeMode(i, QHeaderView.Stretch)
+
+        else:
+            print("Nooooo data")
 
 
+    def main(self):
 
+        self.schema_chooser.activated.connect(self.control_shema_changes)
+        self.table_chooser.activated.connect(self.control_table_changes)
 
+    def control_shema_changes(self):
+        self.choosen_schema = self.schema_chooser.currentText()
+        self.table_chooser.clear()
+        self.clean_table()
+        self.init_table_chooser(self.table_chooser,)
+
+    def control_table_changes(self):
+        self.choosen_table = self.table_chooser.currentText()
+        self.clean_table()
+        self.fill_table()
 
 
 if __name__ == "__main__":
@@ -153,13 +177,14 @@ if __name__ == "__main__":
     # window.open()
     # window.show()
     app = QApplication(sys.argv)
-    # test = ConnectionDialog()
-    # test.dialog_window.exec_()
+    test = ConnectionDialog()
+    test.dialog_window.exec_()
     # conn_string = "host='localhost'dbname='postgres' user='postgres' password='root'"
-    conn_string = "host='localhost'dbname='test38' user='postgres' password='root'"
+    # conn_string = "host='localhost'dbname='test38' user='postgres' password='root'"
 
-    if conn_string!="":
-        window = DdWindow(conn_string)
+    if test.conn_string!="":
+        window = DdWindow(test.conn_string)
         window.main_window.show()
+
     sys.exit(app.exec_())
 
