@@ -128,10 +128,10 @@ class DdWindow( QtWidgets.QMainWindow):
 
             self.cursor.execute(("SELECT * FROM {0}.{1}").format(self.choosen_schema,self.choosen_table))
 
-            print(self.cursor.description)
+            # print(self.cursor.description)
 
             a = self.cursor.fetchall()
-            print( a)
+            # print( a)
 
             colnames = [desc[0] for desc in self.cursor.description]
 
@@ -158,6 +158,8 @@ class DdWindow( QtWidgets.QMainWindow):
 
         self.schema_chooser.activated.connect(self.control_shema_changes)
         self.table_chooser.activated.connect(self.control_table_changes)
+        self.add_button.clicked.connect(self.add_record)
+
 
     def control_shema_changes(self):
         self.choosen_schema = self.schema_chooser.currentText()
@@ -170,6 +172,77 @@ class DdWindow( QtWidgets.QMainWindow):
         self.clean_table()
         self.fill_table()
 
+    def add_record(self):
+
+
+        # import time
+        # app2 = QApplication(sys.argv)
+        # add = AddDialog(self)
+        try:
+            add = AddDialog(self)
+            add.add_window.exec_()
+        except psycopg2.Error as e:
+            QMessageBox.critical(self.main_window, 'ERROR', "No attributes to add data.",
+                                 QMessageBox.Ok)
+
+
+        # app2.exec_()
+
+
+
+
+class AddDialog(QtWidgets.QDialog):
+
+    def __init__(self, parent=None):
+        QtWidgets.QDialog.__init__(self)
+        self.add_window = loadUi("test_add.ui")
+        self.grid = self.add_window.gridLayout
+        self.form_grid(self.grid,parent)
+        self.buttonBox = self.add_window.buttonBox
+        self.buttonBox.accepted.connect(self.apply)
+        self.buttonBox.rejected.connect(self.reject)
+        # self.add_window.exec_()
+
+
+
+    def form_grid(self,grid,parent):
+
+        # try:
+        parent.cursor.execute(("SELECT * FROM {0}.{1}").format(parent.choosen_schema, parent.choosen_table))
+        # except psycopg2.Error as e:
+        #     QMessageBox.critical(parent.main_window, 'ERROR', "No attributes to add data.",
+        #                          QMessageBox.Ok)
+
+
+
+        # print(parent.cursor.)
+        # print(self.cursor.description)
+
+        a = parent.cursor.fetchall()
+        # print( a)
+
+        colnames = [desc[0] for desc in parent.cursor.description]
+        dict_of_widgets = {}
+
+        for i in range(len(colnames)):
+            buff_label = QtWidgets.QLabel(colnames[i])
+            buff_widget = QtWidgets.QComboBox()
+            grid.addWidget(buff_label, i, 0)
+            grid.addWidget(buff_widget, i, 1)
+            dict_of_widgets[buff_label] = buff_widget
+
+    def apply(self):
+        pass
+
+
+    def reject(self):
+        pass
+
+
+
+
+
+
 
 if __name__ == "__main__":
     # app = QApplication(sys.argv)
@@ -177,14 +250,17 @@ if __name__ == "__main__":
     # window.open()
     # window.show()
     app = QApplication(sys.argv)
-    test = ConnectionDialog()
-    test.dialog_window.exec_()
+    # test = ConnectionDialog()
+    # test.dialog_window.exec_()
     # conn_string = "host='localhost'dbname='postgres' user='postgres' password='root'"
-    # conn_string = "host='localhost'dbname='test38' user='postgres' password='root'"
+    conn_string = "host='localhost'dbname='test38' user='postgres' password='root'"
 
-    if test.conn_string!="":
-        window = DdWindow(test.conn_string)
+    if conn_string!="":
+        window = DdWindow(conn_string)
         window.main_window.show()
+
+
+            # app2 = QApplication(sys.argv)
 
     sys.exit(app.exec_())
 

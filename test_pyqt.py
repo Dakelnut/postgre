@@ -34,8 +34,8 @@ data = {'Kitty': ['1', '2', '3', '3'],
         'Meow': ['7', '8', '9', '5'],
         'Purr': ['4', '3', '4', '8'], }
 
-table.setRowCount(4)
-table.setColumnCount(4)
+table.setRowCount(5)
+table.setColumnCount(5)
 # table.insertRow(table.rowCount())
 horHeaders = []
 for n, key in enumerate(sorted(data.keys())):
@@ -44,6 +44,9 @@ for n, key in enumerate(sorted(data.keys())):
         newitem = QTableWidgetItem(item)
         table.setItem(m, n, newitem)
         table.item(m, n).setTextAlignment(Qt.AlignLeft | Qt.AlignVCenter)
+
+for i in range(4):
+    table.setCellWidget(i, 4, QComboBox())
 
 table.setHorizontalHeaderLabels(horHeaders)
 header = table.horizontalHeader()
