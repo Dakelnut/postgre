@@ -91,6 +91,7 @@ class DdWindow( QtWidgets.QMainWindow):
             print(e)
 
         table_names = [name[0] for name in self.cursor.fetchall()]
+        print("AAAAAAAA",table_names)
         if len(table_names) == 0:
             tb_chooser.addItem(str(None))
         else:
@@ -191,6 +192,9 @@ class DdWindow( QtWidgets.QMainWindow):
             add = AddDialog(self)
             add.add_window.exec_()
         except Exception as e:
+
+
+
             QMessageBox.critical(self.main_window, 'ERROR', "No attributes to add data.",
                                  QMessageBox.Ok)
 
@@ -225,8 +229,10 @@ class AddDialog(QtWidgets.QDialog):
 
         try:
             parent.cursor.execute(("SELECT * FROM {0}.{1}").format(parent.choosen_schema, parent.choosen_table))
+
+
         except psycopg2.Error as e:
-            parent.cursor.rollback()
+            parent.conn.rollback()
             raise psycopg2.Error
 
 
