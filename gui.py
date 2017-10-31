@@ -82,8 +82,13 @@ class DdWindow( QtWidgets.QMainWindow):
 
     def init_table_chooser(self,tb_chooser):
 
-        self.cursor.execute(("SELECT TABLE_NAME  from information_schema.tables where table_schema= '{0}'").format(self.choosen_schema))
+        try:
 
+            self.cursor.execute(("SELECT TABLE_NAME  from information_schema.tables where table_schema= '{0}'").format(
+                self.choosen_schema))
+
+        except Exception as e:
+            print(e)
 
         table_names = [name[0] for name in self.cursor.fetchall()]
         if len(table_names) == 0:
@@ -126,7 +131,11 @@ class DdWindow( QtWidgets.QMainWindow):
 
         if self.choosen_schema != None and self.choosen_table != None:
 
-            self.cursor.execute(("SELECT * FROM {0}.{1}").format(self.choosen_schema,self.choosen_table))
+
+
+            self.cursor.execute(("SELECT * FROM {0}.{1}").format(self.choosen_schema, self.choosen_table))
+
+
 
             # print(self.cursor.description)
 
@@ -165,7 +174,7 @@ class DdWindow( QtWidgets.QMainWindow):
         self.choosen_schema = self.schema_chooser.currentText()
         self.table_chooser.clear()
         self.clean_table()
-        self.init_table_chooser(self.table_chooser,)
+        self.init_table_chooser(self.table_chooser)
 
     def control_table_changes(self):
         self.choosen_table = self.table_chooser.currentText()
@@ -181,9 +190,10 @@ class DdWindow( QtWidgets.QMainWindow):
         try:
             add = AddDialog(self)
             add.add_window.exec_()
-        except psycopg2.Error as e:
+        except Exception as e:
             QMessageBox.critical(self.main_window, 'ERROR', "No attributes to add data.",
                                  QMessageBox.Ok)
+
 
 
         # app2.exec_()
@@ -197,26 +207,32 @@ class AddDialog(QtWidgets.QDialog):
         QtWidgets.QDialog.__init__(self)
         self.add_window = loadUi("test_add.ui")
         self.grid = self.add_window.gridLayout
-        self.form_grid(self.grid,parent)
+
         self.buttonBox = self.add_window.buttonBox
         self.buttonBox.accepted.connect(self.apply)
         self.buttonBox.rejected.connect(self.reject)
+
+
+        try:
+            self.form_grid(self.grid, parent)
+        except psycopg2.Error as e:
+            raise psycopg2.Error
         # self.add_window.exec_()
 
 
 
     def form_grid(self,grid,parent):
 
-        # try:
-        parent.cursor.execute(("SELECT * FROM {0}.{1}").format(parent.choosen_schema, parent.choosen_table))
-        # except psycopg2.Error as e:
-        #     QMessageBox.critical(parent.main_window, 'ERROR', "No attributes to add data.",
-        #                          QMessageBox.Ok)
+        try:
+            parent.cursor.execute(("SELECT * FROM {0}.{1}").format(parent.choosen_schema, parent.choosen_table))
+        except psycopg2.Error as e:
+            parent.cursor.rollback()
+            raise psycopg2.Error
 
 
 
         # print(parent.cursor.)
-        # print(self.cursor.description)
+        print(parent.cursor.description)
 
         a = parent.cursor.fetchall()
         # print( a)
