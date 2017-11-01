@@ -6,6 +6,7 @@ from PyQt5.QtWidgets import QApplication, QMessageBox
 from PyQt5 import QtWidgets
 
 import psycopg2
+from psycopg2.extensions import AsIs
 import sys
 
 
@@ -169,6 +170,7 @@ class DdWindow( QtWidgets.QMainWindow):
         self.schema_chooser.activated.connect(self.control_shema_changes)
         self.table_chooser.activated.connect(self.control_table_changes)
         self.add_button.clicked.connect(self.add_record)
+        self.delete_button.clicked.connect(self.delete_record)
 
 
     def control_shema_changes(self):
@@ -199,6 +201,24 @@ class DdWindow( QtWidgets.QMainWindow):
 
 
         # app2.exec_()
+
+    def delete_record(self):
+        try:
+            indexes = [index.row() for index in self.main_table.selectedIndexes()]
+            for el in reversed(indexes):
+                data = [self.main_table.item(el,i).text().strip() for i in range(self.main_table.columnCount())]
+                colnames = [desc[0] for desc in self.cursor.description]
+                insert_statement = ("delete from {0}.{1} WHERE  {2} = '{3}';").format(self.choosen_schema,self.choosen_table,colnames[0],data[0])
+                self.cursor.execute(insert_statement)
+                self.main_table.removeRow(el)
+            # data = self.main_table.item(indexes[0],2).text()
+            #     print(data)
+            # print(indexes)
+            # for index in reversed(indexes):
+            #     self.main_table.removeRow(index)
+        except Exception as e:
+            print(e)
+
 
 
 
@@ -330,7 +350,7 @@ class AddDialog(QtWidgets.QDialog):
             #     self.parent.cursor.execute(
             #         ("INSERT INTO {0}.{1} ({2}) VALUES ({3});").format(self.parent.choosen_schema,
             #             self.parent.choosen_table, label.text(), self.dict_of_widgets[label].text()))
-            from psycopg2.extensions import AsIs
+
             columns = self.dict_of_widgets.keys()
             final_values = [self.dict_of_widgets[column] for column in columns]
             columns = [el.text() for el in columns]
