@@ -48,32 +48,33 @@ import sys
 
 
 def main():
-    conn_string = "host='localhost'dbname='test_cartel4' user='postgres' password='root'"
+    conn_string = "host='localhost'dbname='test38' user='postgres' password='root'"
     conn = psycopg2.connect(conn_string)
     cursor = conn.cursor()
     # insert_statement = "insert into sc.table (name) values ('{0}')".format("test_name2")
 
     from psycopg2.extensions import AsIs
     # columns = ["name","some_num"]
-    values = ["31","Wwww","4","123443","0.12342","479263"]
-    cursor.execute("Select * from cartel.equipment;")
-    columns = [desc[0] for desc in cursor.description]
-    print(columns)
-    for i in range(len(columns)):
-        columns[i] = '"'+columns[i] + '"'
-    insert_statement = ('insert into cartel.equipment (inventory_key,"name ","type_of_equipment ",cost,run_out,belongs_to_lab) values {0}').format(tuple(values))
-    print(insert_statement)
+    # values = ["31","Wwww","4","123443","0.12342","479263"]
+    # cursor.execute("Select * from cartel.equipment;")
+    # columns = [desc[0] for desc in cursor.description]
+    # print(columns)
+    # for i in range(len(columns)):
+    #     columns[i] = '"'+columns[i] + '"'
+    # insert_statement = ('insert into cartel.equipment (inventory_key,"name ","type_of_equipment ",cost,run_out,belongs_to_lab) values {0}').format(tuple(values))
+    # print(insert_statement)
 
     # sta = cursor.mogrify(insert_statement, (AsIs( tuple(values))))
     # sta = cursor.mogrify(insert_statement, (AsIs(','.join(columns)), tuple(values)))
     # print(sta)
-    cursor.execute(insert_statement)
+    # cursor.execute(insert_statement)
 
     # self.parent.conn.commit()
 
+    insert_statement = ("insert into sc.table (name) values ('{0}')").format("test3")
 
 
-    # cursor.execute(insert_statement)
+    cursor.execute(insert_statement)
     conn.commit()
     cursor.close()
     conn.close()

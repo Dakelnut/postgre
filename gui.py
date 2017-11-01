@@ -171,6 +171,7 @@ class DdWindow( QtWidgets.QMainWindow):
         self.table_chooser.activated.connect(self.control_table_changes)
         self.add_button.clicked.connect(self.add_record)
         self.delete_button.clicked.connect(self.delete_record)
+        self.search_button.clicked.connect(self.search_record)
 
 
     def control_shema_changes(self):
@@ -219,8 +220,14 @@ class DdWindow( QtWidgets.QMainWindow):
         except Exception as e:
             print(e)
 
+    def search_record(self):
+        try:
+            add = AddDialog(self)
+            add.add_window.exec_()
+        except Exception as e:
 
-
+            QMessageBox.critical(self.main_window, 'ERROR', "No attributes to add data.",
+                                 QMessageBox.Ok)
 
 
 class AddDialog(QtWidgets.QDialog):
@@ -386,9 +393,15 @@ class AddDialog(QtWidgets.QDialog):
         pass
 
 
-
-
-
+class SearchWindow(QtWidgets.QDialog):
+    def __init__(self, parent=None):
+        QtWidgets.QDialog.__init__(self)
+        self.search_window = loadUi("search_dialog.ui")
+        self.grid = self.search_window.gridLayout
+        self.parent = parent
+        self.buttonBox = self.add_window.buttonBox
+        self.buttonBox.accepted.connect(self.apply)
+        self.buttonBox.rejected.connect(self.reject)
 
 
 if __name__ == "__main__":
@@ -399,8 +412,13 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
     # test = ConnectionDialog()
     # test.dialog_window.exec_()
+    #
+    #
+    # if test.conn_string!="":
+    #     window = DdWindow(test.conn_string)
+    #     window.main_window.show()
     # conn_string = "host='localhost'dbname='postgres' user='postgres' password='root'"
-    conn_string = "host='localhost'dbname='test_cartel4' user='postgres' password='root'"
+    conn_string = "host='localhost'dbname='test38' user='postgres' password='root'"
 
     if conn_string!="":
         window = DdWindow(conn_string)
