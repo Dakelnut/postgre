@@ -91,7 +91,7 @@ class DdWindow( QtWidgets.QMainWindow):
             print(e)
 
         table_names = [name[0] for name in self.cursor.fetchall()]
-        print("AAAAAAAA",table_names)
+        # print("AAAAAAAA",table_names)
         if len(table_names) == 0:
             tb_chooser.addItem(str(None))
         else:
@@ -132,9 +132,9 @@ class DdWindow( QtWidgets.QMainWindow):
 
         if self.choosen_schema != None and self.choosen_table != None:
 
-
-
-            self.cursor.execute(("SELECT * FROM {0}.{1}").format(self.choosen_schema, self.choosen_table))
+            self.cursor.execute(("SELECT * FROM {0}.{1} ").format(self.choosen_schema, self.choosen_table))
+            colnames = [desc[0] for desc in self.cursor.description]
+            self.cursor.execute(("SELECT * FROM {0}.{1} ORDER BY  {2}").format(self.choosen_schema, self.choosen_table,colnames[0]))
 
 
 
@@ -193,8 +193,6 @@ class DdWindow( QtWidgets.QMainWindow):
             add.add_window.exec_()
         except Exception as e:
 
-
-
             QMessageBox.critical(self.main_window, 'ERROR', "No attributes to add data.",
                                  QMessageBox.Ok)
 
@@ -211,14 +209,14 @@ class AddDialog(QtWidgets.QDialog):
         QtWidgets.QDialog.__init__(self)
         self.add_window = loadUi("test_add.ui")
         self.grid = self.add_window.gridLayout
-
+        self.parent = parent
         self.buttonBox = self.add_window.buttonBox
         self.buttonBox.accepted.connect(self.apply)
         self.buttonBox.rejected.connect(self.reject)
 
 
         try:
-            self.form_grid(self.grid, parent)
+            self.form_grid(self.grid, self.parent)
         except psycopg2.Error as e:
             raise psycopg2.Error
         # self.add_window.exec_()
@@ -228,34 +226,141 @@ class AddDialog(QtWidgets.QDialog):
     def form_grid(self,grid,parent):
 
         try:
+            # print("EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE")
+            parent.cursor.execute("""SELECT
+                            tc.constraint_name, tc.table_name, kcu.column_name,
+                            ccu.table_name AS foreign_table_name,
+                            ccu.column_name AS foreign_column_name
+                        FROM
+                            information_schema.table_constraints AS tc
+                            JOIN information_schema.key_column_usage AS kcu
+                              ON tc.constraint_name = kcu.constraint_name
+                            JOIN information_schema.constraint_column_usage AS ccu
+                              ON ccu.constraint_name = tc.constraint_name
+                        WHERE constraint_type = 'FOREIGN KEY' AND tc.table_name='{0}';""".format(parent.choosen_table))
+            foreign_keys =parent.cursor.fetchall()
+            # print(foreign_keys)
+            # print("EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE")
+
             parent.cursor.execute(("SELECT * FROM {0}.{1}").format(parent.choosen_schema, parent.choosen_table))
+            # print(parent.cursor.description)
 
 
         except psycopg2.Error as e:
             parent.conn.rollback()
+            print(e)
+
+            #Add rollback to all query !
+
             raise psycopg2.Error
 
 
 
+         # where table_name = 'config';
         # print(parent.cursor.)
-        print(parent.cursor.description)
+
 
         a = parent.cursor.fetchall()
         # print( a)
-
+        # try:
+        #     parent.cursor.execute(
+        #             (" select column_name, data_type from information_schema.columns where table_name = {0};").format(
+        #                 parent.choosen_table))
+        #     print("BBBBBBBBBBBBBBB")
+        #     print(parent.cursor.fetchall())
+        # except psycopg2.Error as e:
+        #     # parent.conn.rollback()
+        #     pass
+        try:
+            key_columns = [el[2] for el in foreign_keys]
+        except Exception as e:
+            print(e)
+        # print("DDD ",key_columns)
         colnames = [desc[0] for desc in parent.cursor.description]
-        dict_of_widgets = {}
+        self.dict_of_widgets = {}
+        try:
+            parent.cursor.execute((" select column_name, data_type from information_schema.columns where table_name = '{0}';").format(
+                            parent.choosen_table))
+        except Exception as e:
+            print(e)
+        # print("BBBBBBBBBBBBBBB")
+        # print(parent.cursor.fetchall())
 
         for i in range(len(colnames)):
-            buff_label = QtWidgets.QLabel(colnames[i])
-            buff_widget = QtWidgets.QComboBox()
-            grid.addWidget(buff_label, i, 0)
-            grid.addWidget(buff_widget, i, 1)
-            dict_of_widgets[buff_label] = buff_widget
+            if not colnames[i] in key_columns:
+                buff_label = QtWidgets.QLabel(colnames[i])
+                buff_widget = QtWidgets.QLineEdit()
+                grid.addWidget(buff_label, i, 0)
+                grid.addWidget(buff_widget, i, 1)
+                self.dict_of_widgets[buff_label] = buff_widget
+            else:
+                index = key_columns.index(colnames[i])
+                buff_label = QtWidgets.QLabel(colnames[i])
+                buff_widget = QtWidgets.QComboBox()
+                try:
+                    ins = " select {0} from  {1}.{2};".format(foreign_keys[index][4],parent.choosen_schema,foreign_keys[index][3])
+                    # print(ins)
+                    parent.cursor.execute((" select {0} from  {1}.{2};").format(foreign_keys[index][4],parent.choosen_schema,foreign_keys[index][3]))
+                    rez = parent.cursor.fetchall()
+                    # print(rez)
+                    for name in rez:
+                        buff_widget.addItem(str(name[0]))
+                except Exception as e:
+                    print("ZZ ",e)
+
+
+                grid.addWidget(buff_label, i, 0)
+                grid.addWidget(buff_widget, i, 1)
+                self.dict_of_widgets[buff_label] = buff_widget
+
+        # print(self.dict_of_widgets)
+        # for el in self.dict_of_widgets.keys():
+        #     print(el.text())
+
 
     def apply(self):
-        pass
+        # print(self.dict_of_widgets)
+        # for label in self.dict_of_widgets.keys():
+        #     print(label.text(),"         ",self.dict_of_widgets[label].text())
 
+        try:
+            # for label in self.dict_of_widgets.keys():
+            #     # self.parent.cursor.execute(("INSERT INTO {0} ({1}) VALUES ({2});",format(self.parent.choosen_table,label.text(),self.dict_of_widgets[label].text() )))
+            #
+            #     self.parent.cursor.execute(
+            #         ("INSERT INTO {0}.{1} ({2}) VALUES ({3});").format(self.parent.choosen_schema,
+            #             self.parent.choosen_table, label.text(), self.dict_of_widgets[label].text()))
+            from psycopg2.extensions import AsIs
+            columns = self.dict_of_widgets.keys()
+            final_values = [self.dict_of_widgets[column] for column in columns]
+            columns = [el.text() for el in columns]
+
+            values= []
+            for val in final_values:
+                if type(val) == QtWidgets.QLineEdit:
+                    values.append(val.text())
+                elif type(val) == QtWidgets.QComboBox:
+                    values.append(val.currentText())
+
+            # values= [el.text() for el in values]
+            print(columns)
+            print("VALUES")
+            print(values)
+            for i in range(len(columns)):
+                columns[i] = '"' + columns[i] + '"'
+            insert_statement = ('insert into {0}.{1} (%s) values %s'.format(self.parent.choosen_schema,self.parent.choosen_table))
+            my_query = self.parent.cursor.mogrify(insert_statement, (AsIs(','.join(columns)), tuple(values)))
+            print(my_query)
+            self.parent.cursor.execute(my_query)
+            self.parent.conn.commit()
+
+        except Exception as e:
+
+            print("ERROR")
+            print("----------------------------------------------------------------------")
+            print(e)
+            QMessageBox.critical(self.add_window, 'ERROR',str(e.diag.message_primary),
+                                 QMessageBox.Ok)
 
     def reject(self):
         pass
@@ -275,7 +380,7 @@ if __name__ == "__main__":
     # test = ConnectionDialog()
     # test.dialog_window.exec_()
     # conn_string = "host='localhost'dbname='postgres' user='postgres' password='root'"
-    conn_string = "host='localhost'dbname='test38' user='postgres' password='root'"
+    conn_string = "host='localhost'dbname='test_cartel4' user='postgres' password='root'"
 
     if conn_string!="":
         window = DdWindow(conn_string)
