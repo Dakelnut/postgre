@@ -222,10 +222,13 @@ class DdWindow( QtWidgets.QMainWindow):
 
     def search_record(self):
         try:
-            add = AddDialog(self)
-            add.add_window.exec_()
-        except Exception as e:
 
+            self.search= SearchWindow(self)
+            self.search.search_window.show()
+
+
+        except Exception as e:
+            print(e)
             QMessageBox.critical(self.main_window, 'ERROR', "No attributes to add data.",
                                  QMessageBox.Ok)
 
@@ -393,16 +396,157 @@ class AddDialog(QtWidgets.QDialog):
         pass
 
 
-class SearchWindow(QtWidgets.QDialog):
+class SearchWindow(QtWidgets.QMdiSubWindow):
     def __init__(self, parent=None):
-        QtWidgets.QDialog.__init__(self)
-        self.search_window = loadUi("search_dialog.ui")
-        self.grid = self.search_window.gridLayout
+        QtWidgets.QMdiSubWindow.__init__(self)
+        self.search_window = loadUi("search_window.ui")
+        self.res_table = self.search_window.search_table
         self.parent = parent
-        self.buttonBox = self.add_window.buttonBox
-        self.buttonBox.accepted.connect(self.apply)
-        self.buttonBox.rejected.connect(self.reject)
+        self.search_button = self.search_window.search_button
+        self.editLine = self.search_window.lineEdit
+        self.table_chooser = self.search_window.table_chooser
+        self.schema_chooser = self.search_window.schema_chooser
+        self.column_chooser = self.search_window.column_chooser
 
+        self.choosen_schema = None
+        self.choosen_table = None
+        self.choosen_column = None
+
+        self.init_schema_chooser(self.schema_chooser)
+        # self.init_table_chooser(self.table_chooser)
+        # self.init_column_chooser(self.column_chooser)
+        self.main()
+
+    def main(self):
+
+        self.schema_chooser.activated.connect(self.control_shema_changes)
+        self.table_chooser.activated.connect(self.control_table_changes)
+        self.column_chooser.activated.connect(self.control_column_changes)
+        self.search_button.clicked.connect(self.search_record)
+
+
+    def clean_table(self):
+        self.res_table.setRowCount(0)
+        self.res_table.setColumnCount(0)
+        self.res_table.clear()
+
+    def control_shema_changes(self):
+        self.choosen_schema = self.schema_chooser.currentText()
+        self.table_chooser.clear()
+        self.column_chooser.clear()
+        self.init_table_chooser(self.table_chooser)
+
+    def control_table_changes(self):
+        self.choosen_table = self.table_chooser.currentText()
+        self.column_chooser.clear()
+        self.init_column_chooser(self.column_chooser)
+
+    def control_column_changes(self):
+        self.choosen_column = self.column_chooser.currentText()
+
+
+    def init_column_chooser(self,clm_chooser):
+        if self.choosen_table != None and  self.choosen_table != "None":
+            try:
+
+                self.parent.cursor.execute(
+                    ("SELECT * FROM {0}.{1};").format(
+                        self.choosen_schema,self.choosen_table))
+
+            except Exception as e:
+                print(e)
+
+            colnames = [desc[0] for desc in self.parent.cursor.description]
+            for column in colnames:
+                clm_chooser.addItem(column)
+
+            self.choosen_column = self.column_chooser.currentText()
+        else:
+            clm_chooser.addItem("None")
+
+            self.choosen_column = self.column_chooser.currentText()
+
+
+
+    def init_table_chooser(self, tb_chooser):
+
+        try:
+
+            self.parent.cursor.execute(("SELECT TABLE_NAME  from information_schema.tables where table_schema= '{0}'").format(
+                self.choosen_schema))
+
+
+
+        except Exception as e:
+            print(e)
+
+        table_names = [name[0] for name in self.parent.cursor.fetchall()]
+        # print("AAAAAAAA",table_names)
+        if len(table_names) == 0:
+            tb_chooser.addItem(str(None))
+            self.choosen_table = None
+
+        else:
+            for table in table_names:
+                tb_chooser.addItem(table)
+
+            self.choosen_table = self.table_chooser.currentText()
+        self.init_column_chooser(self.column_chooser)
+
+
+
+    def init_schema_chooser(self, sh_chooser):
+        try:
+            self.parent.cursor.execute(
+                "select schema_name from information_schema.schemata where  schema_name !~ '^(pg_|sql_)'  AND  schema_name !~'information_schema';")
+        except Exception as e:
+            print(e)
+        schema_names = [name[0] for name in self.parent.cursor.fetchall()]
+        for schema in schema_names:
+            sh_chooser.addItem(schema)
+        # sh_chooser.addItem(schema_names[1])
+
+        self.choosen_schema = self.schema_chooser.currentText()
+        self.init_table_chooser(self.table_chooser)
+
+        # sh_chooser.activated.connect(self.init_table_chooser)
+
+
+    def search_record(self):
+        self.clean_table()
+        try:
+            self.parent.cursor.execute(
+                ("SELECT *  from {0}.{1} where {2} = '{3}'").format(
+                    self.choosen_schema,self.choosen_table,self.choosen_column,self.editLine.text()))
+
+            colnames = [desc[0] for desc in self.parent.cursor.description]
+
+            data = self.parent.cursor.fetchall()
+
+            self.fill_search_table(colnames,data)
+
+
+
+        except Exception as e:
+            print(e)
+
+
+    def fill_search_table(self,headers,data):
+
+        self.res_table.setColumnCount(len(headers))
+
+        for n, meaning in enumerate(data):
+            self.res_table.insertRow(self.res_table.rowCount())
+            # print(n,"  ",meaning)
+            for m, item in enumerate(meaning):
+                # print("\t",m, "  ", item)
+                newitem = QTableWidgetItem(str(item))
+                self.res_table.setItem(n, m, newitem)
+                self.res_table.item(n, m).setTextAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+        self.res_table.setHorizontalHeaderLabels(headers)
+        header = self.res_table.horizontalHeader()
+        for i in range(header.count()):
+            self.res_table.horizontalHeader().setSectionResizeMode(i, QHeaderView.Stretch)
 
 if __name__ == "__main__":
     # app = QApplication(sys.argv)
