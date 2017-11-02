@@ -15,7 +15,12 @@ window = loadUi("db2.ui")
 # dial.setNotchesVisible(True)
 
 
+class MyWindow(QTableView):
+    def __init__(self, *args):
+        QTableView.__init__(self, *args)
 
+        tablemodel = MyTableModel(my_array, self)
+        self.setModel(tablemodel)
 table = window.tableWidget
 
 # lcdNumber = window.lcdNumber
@@ -29,10 +34,10 @@ table = window.tableWidget
 
 
 # table.data.append([1,1,1,1,1])
-data = {'Kitty': ['1', '2', '3', '3'],
-        'Cat': ['4', '5', '6', '2'],
-        'Meow': ['7', '8', '9', '5'],
-        'Purr': ['4', '3', '4', '8'], }
+data = {'Kitty': ['132', '2', '3', '3'],
+        'Cat': ['4', '555', '6', '2'],
+        'Meow': ['7', '858', '9', '5'],
+        'Purr': ['4', '3', '543', '8'], }
 
 table.setRowCount(5)
 table.setColumnCount(5)
@@ -58,6 +63,37 @@ for i in range(header.count()):
 # # Adjust size of Table
 # table.resizeColumnsToContents()
 # table.resizeRowsToContents()
+
+# def my_partion(string,striper ):
+#     f = list(string.partition(striper))
+#     el = f[2]
+#     while striper in el:
+#         f.pop(len(f)-1)
+#         buff = list(el.partition(striper))
+#         f.append(buff)
+#         el = buff[2]
+#     return  f
+# print(my_partion("55870955785435",'5'))
+
+
+el = '555'
+for i in range(table.rowCount()):
+    for j in range(table.columnCount()):
+        try:
+            print(i,j)
+            item = table.item(i,j)
+
+            if item.text().find(el) != -1:
+                newitem = QTableWidgetItem(item.text().replace(el,'<span style="color:#ff0000;">{0}</span>'.format(el)).setHmtl())
+                # print("AAAA", split_items)
+                table.setItem(i, j, newitem)
+                # table.item(i,j).setBackground(QColor(125,125,125))
+        except Exception as e:
+            print(e)
+            continue
+
+
+
 
 window.show()
 sys.exit(app.exec_())

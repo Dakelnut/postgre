@@ -53,7 +53,7 @@ def main():
     cursor = conn.cursor()
     # insert_statement = "insert into sc.table (name) values ('{0}')".format("test_name2")
 
-    from psycopg2.extensions import AsIs
+    # from psycopg2.extensions import AsIs
     # columns = ["name","some_num"]
     # values = ["31","Wwww","4","123443","0.12342","479263"]
     # cursor.execute("Select * from cartel.equipment;")
@@ -71,10 +71,11 @@ def main():
 
     # self.parent.conn.commit()
 
-    insert_statement = ("insert into sc.table (name) values ('{0}')").format("test3")
+    insert_statement = ("select * from sc.pyqt_table where name LIKE  '%est%';")
 
 
     cursor.execute(insert_statement)
+    print(cursor.fetchall())
     conn.commit()
     cursor.close()
     conn.close()

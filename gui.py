@@ -65,21 +65,26 @@ class DdWindow( QtWidgets.QMainWindow):
         self.choosen_table = None
         QtWidgets.QMainWindow.__init__(self)
         self.init_connection(cn_string)
-        self.main_window = loadUi("mwindow.ui")
+        self.main_window = loadUi("mwindow2.ui")
         self.main_table = self.main_window.tableWidget
+        self.filter_frame = self.main_window.filter_frame
+
+        self.filter_button = self.main_window.filter
         self.add_button = self.main_window.add
         self.delete_button = self.main_window.my_delete
         self.search_button = self.main_window.search
         self.help_button = self.main_window.help
         self.table_chooser = self.main_window.table_chooser
         self.schema_chooser = self.main_window.schema_chooser
-
+        self.init_filter_frame()
         self.init_schema_chooser(self.schema_chooser)
         self.init_table_chooser(self.table_chooser)
         self.main()
         # self.fill_table()
 
-
+    def init_filter_frame(self):
+        self.filter_frame.hide()
+        self.frame = FilterFrame(self)
 
     def init_table_chooser(self,tb_chooser):
 
@@ -172,6 +177,10 @@ class DdWindow( QtWidgets.QMainWindow):
         self.add_button.clicked.connect(self.add_record)
         self.delete_button.clicked.connect(self.delete_record)
         self.search_button.clicked.connect(self.search_record)
+        self.filter_button.clicked.connect(self.frame.show_filter_window)
+
+
+
 
 
     def control_shema_changes(self):
@@ -516,7 +525,7 @@ class SearchWindow(QtWidgets.QMdiSubWindow):
         self.clean_table()
         try:
             self.parent.cursor.execute(
-                ("SELECT *  from {0}.{1} where {2} = '{3}'").format(
+                ("SELECT *  from {0}.{1} where {2} LIKE '%{3}%';").format(
                     self.choosen_schema,self.choosen_table,self.choosen_column,self.editLine.text()))
 
             colnames = [desc[0] for desc in self.parent.cursor.description]
@@ -547,6 +556,67 @@ class SearchWindow(QtWidgets.QMdiSubWindow):
         header = self.res_table.horizontalHeader()
         for i in range(header.count()):
             self.res_table.horizontalHeader().setSectionResizeMode(i, QHeaderView.Stretch)
+
+#
+class FilterFrame():
+
+    def __init__(self, parent=None):
+        self.parent = parent
+        self.flag = True
+        self.reset_button = self.parent.main_window.reset
+        self.filter_search_button = self.parent.main_window.filter_search
+        self.radio_contains = self.parent.main_window.radioButton
+        self.radio_contains.setChecked(True)
+        self.radio_contains.toggled.connect(self.control_radiobtn)
+        self.radio_values = self.parent.main_window.radioButton_2
+        self.radio_values.toggled.connect(self.control_radiobtn)
+        self.eline_contains = self.parent.main_window.lineEdit
+        self.eline_contains.textChanged.connect(self.highlighted_text)
+        self.eline_values = self.parent.main_window.lineEdit_2
+        self.filter_search_button.clicked.connect(self.highlighted_values)
+
+
+    def highlighted_text(self):
+        input_line = self.eline_contains.text()
+
+
+
+    def highlighted_values(self):
+        pass
+
+
+
+    def control_radiobtn(self):
+        if self.radio_values.isChecked() == False:
+            self.reset_button.setEnabled(True)
+            self.eline_contains.setEnabled(True)
+            self.eline_contains.setEnabled(True)
+            # self.eline_contains.show()
+            # self.eline_contains.setStyleSheet("background-color: rgb(255, 255, 255);")
+            self.filter_search_button.setEnabled(False)
+            self.eline_values.setEnabled(False)
+            # self.eline_values.hide()
+            # self.eline_values.setStyleSheet("background-color: rgb(240, 240, 240);")
+        else:
+            self.reset_button.setEnabled(False)
+            self.eline_contains.setEnabled(False)
+            # self.eline_contains.hide()
+            # self.eline_contains.setStyleSheet("background-color: rgb(240, 240, 240);")
+            self.filter_search_button.setEnabled(True)
+            self.eline_values.setEnabled(True)
+            # self.eline_values.show()
+            # self.eline_values.setStyleSheet("background-color: rgb(255, 255, 255);")
+
+
+
+    def show_filter_window(self):
+        if self.flag == True:
+            self.parent.filter_frame.show()
+            self.flag = not self.flag
+        else:
+            self.parent.filter_frame.hide()
+            self.flag = not self.flag
+
 
 if __name__ == "__main__":
     # app = QApplication(sys.argv)
